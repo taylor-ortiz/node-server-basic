@@ -1,38 +1,24 @@
-const http = require('http');
+const path = require('path');
 
-const server = http.createServer((req, res) => {
-    const url = req.url;
-    const method = req.method;
+const express = require('express');
+const bodyParser = require('body-parser');
 
-    if (url === '/') {
-        res.write('<html>')
-        res.write('<head><title>Greetings!</title></head>')
-        res.write('<body><h1>Greetings!!</h1></body>')
-        res.write('<body><form action="/create-user" method="POST"><input type="text" name="username"><button type="submit">Send</button></form></body>')
-        res.write('</html>')
-        res.end();
-    }
+const app = express();
 
-    if (url === '/users') {
-        res.write('<html>')
-        res.write('<head><title>Greetings!</title></head>')
-        res.write('<body><ul><li>User 1</li><li>User 2</li></ul></body>')
-        res.write('</html>')
-        res.end();
-    }
+app.set('view engine', 'pug');
+app.set('views', 'views')
 
-    if (url === '/create-user' && method === "POST") {
-        const body = [];
-        req.on('data', (chunk) => {
-            body.push(chunk);
-        })
+const adminData = require('./routes/admin');
+const shopRoutes = require('./routes/shop');
 
-        return req.on('end', () => {
-            const parsedBody = Buffer.concat(body).toString();
-            console.log('what is the value of parsed body? ', parsedBody);
-        })
-    }
+app.use(bodyParser.urlencoded({extended: false}));
+app.use(express.static(path.join(__dirname, 'public')));
 
+app.use('/admin', adminData.routes);
+app.use(shopRoutes);
+
+app.use((req, res, next) => {
+    res.status(404).sendFile(path.join(__dirname, 'views', '404.html'));
 });
 
-server.listen(3000);
+app.listen(3000);
